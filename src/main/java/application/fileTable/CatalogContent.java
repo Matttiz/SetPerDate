@@ -17,17 +17,13 @@ public class CatalogContent {
     private File source;
     private List<FileRow> list = new ArrayList<>();
 
+
     @SneakyThrows
-    public CatalogContent(File source){
+    public CatalogContent(File source) {
         this.source = source;
         File[] listOfFiles = this.source.listFiles();
         FileRow fileRow;
-            for (File file : listOfFiles) {
-                BasicFileAttributes attributes = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
-                FileTime time = attributes.creationTime();
-                fileRow = new FileRow(file,time);
-                this.list.add(fileRow);
-            }
+        list.addAll(findFiles(source));
         sort();
     }
 
@@ -91,4 +87,25 @@ public class CatalogContent {
         return dates.stream().distinct().collect(Collectors.toList());
     }
 
+    @SneakyThrows
+    public List<FileRow> findFiles(File fileToCheck){
+        File[] listOfFiles = fileToCheck.listFiles();
+        List<FileRow> list = new ArrayList<>();
+        List<FileRow> list2 = new ArrayList<>();
+        FileRow fileRow;
+        for (File file : listOfFiles) {
+            if(file.isDirectory()){
+                list.addAll(findFiles(file));
+            }else {
+                String extension = file.getName().substring(file.getName().lastIndexOf(".") + 1);
+                if(extension.equals("png") || extension.equals("jpg")) {
+                    BasicFileAttributes attributes = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
+                    FileTime time = attributes.creationTime();
+                    fileRow = new FileRow(file, time);
+                    list.add(fileRow);
+                }
+            }
+        }
+        return list;
+    }
 }
