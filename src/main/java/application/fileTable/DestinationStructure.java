@@ -28,15 +28,17 @@ public class DestinationStructure {
     public void copyFile(File destination){
         String destinationFile;
         for(FileRow fileRow : catalogContent.getList()){
-            destinationFile = destination.getAbsolutePath()
-                    + File.separatorChar
-                    + fileRow.getCreationDateAsPrettyString()
-                    + File.separatorChar
-                    + fileRow.getThisDayPhotoCount()
-                    + fileRow.getExtension();
+            if(!fileRow.isCopied()) {
+                destinationFile = destination.getAbsolutePath()
+                        + File.separatorChar
+                        + fileRow.getCreationDateAsPrettyString()
+                        + File.separatorChar
+                        + fileRow.getThisDayPhotoCount()
+                        + fileRow.getExtension();
 
-            FileUtils.copyFile(new File(fileRow.getAbsolutPathToFile()), new File(destinationFile));
-            fileRow.setCopied(true);
+                FileUtils.copyFile(new File(fileRow.getAbsolutPathToFile()), new File(destinationFile));
+                fileRow.setCopied(true);
+            }
         }
     }
 }
