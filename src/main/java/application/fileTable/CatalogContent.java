@@ -3,7 +3,6 @@ package application.fileTable;
 import lombok.SneakyThrows;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
@@ -12,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class CatalogContent {
@@ -33,6 +31,14 @@ public class CatalogContent {
         sort();
     }
 
+    public File getSource() {
+        return source;
+    }
+
+    public List<FileRow> getList() {
+        return list;
+    }
+
     public void sort(){
         Collections.sort(list, new FileRow.sortItems());
     }
@@ -41,7 +47,7 @@ public class CatalogContent {
         System.out.println();
         for(FileRow file : list){
             System.out.println(
-                    file.getCreationAsPrettyPrint() + " "
+                    file.getCreationDateWithHoursAndMinutesAsPrettyString() + " "
                             + file.getThisDayPhotoCountFormatted() + " "
                             + file.isCopied() + " "
                             + file.getAbsolutPathToFile());

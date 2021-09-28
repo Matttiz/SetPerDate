@@ -15,7 +15,9 @@ public class FileRow {
     private int thisDayPhotoCount;
     private boolean copied;
     private static String pattern = "yyyy-MM-dd HH:mm:ss";
+    private static String patternDate = "yyyy-MM-dd";
     private static SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
+    private static SimpleDateFormat simpleDateFormatDate = new SimpleDateFormat(patternDate);
 
 
     public FileRow(){
@@ -37,8 +39,12 @@ public class FileRow {
         return creation;
     }
 
-    public String getCreationAsPrettyPrint() {
+    public String getCreationDateWithHoursAndMinutesAsPrettyString() {
         return simpleDateFormat.format(creation);
+    }
+
+    public String getCreationDateAsPrettyString() {
+        return simpleDateFormatDate.format(creation);
     }
 
     public int getThisDayPhotoCount() {
@@ -68,4 +74,7 @@ public class FileRow {
         }
     }
 
+    public String getExtension(){
+        return getAbsolutPathToFile().substring(getAbsolutPathToFile().lastIndexOf("."));
+    }
 }

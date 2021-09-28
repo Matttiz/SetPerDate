@@ -1,6 +1,7 @@
 package application.fileTable;
 
 import lombok.SneakyThrows;
+import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -15,14 +16,27 @@ public class DestinationStructure {
         this.catalogContent = catalogContent;
         List<String> list =this.catalogContent.getUniqueDatesList();
         for (String catalog: list){
-            File directory = new File(destination.getAbsolutePath() + File.separatorChar+ catalog);
-//            if(directory.exists() && directory.isDirectory()){
-//
-//            }
+            File directory = new File(destination.getAbsolutePath() + File.separatorChar + catalog);
             if(!(directory.exists() && directory.isDirectory())){
                 directory.mkdir();
                 destinationSubDirectory.add(directory);
             }
+        }
+    }
+
+    @SneakyThrows
+    public void copyFile(File destination){
+        String destinationFile;
+        for(FileRow fileRow : catalogContent.getList()){
+            destinationFile = destination.getAbsolutePath()
+                    + File.separatorChar
+                    + fileRow.getCreationDateAsPrettyString()
+                    + File.separatorChar
+                    + fileRow.getThisDayPhotoCount()
+                    + fileRow.getExtension();
+
+            FileUtils.copyFile(new File(fileRow.getAbsolutPathToFile()), new File(destinationFile));
+            fileRow.setCopied(true);
         }
     }
 }
