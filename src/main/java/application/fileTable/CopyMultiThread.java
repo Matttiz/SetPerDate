@@ -1,59 +1,44 @@
 package application.fileTable;
 
+import lombok.SneakyThrows;
+import org.apache.commons.io.FileUtils;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+
 public class CopyMultiThread implements Runnable{
 
-    public CopyMultiThread(){
-
+    private static int number = 0 ;
+    private File destination;
+    private FileRow fileRow;
+    public CopyMultiThread(File destination, FileRow fileRow) {
+        this.destination = destination;
+        this.fileRow = fileRow;
+        number += 1;
+        System.out.println(number);
     }
 
 
 
-    public synchronized String getNewFileName(String directotry, String extension) {
-        /**
-         * Parsujemy numer folderu ze stringa do int
-         */
-        int fileNumber = 0;
-        /**
-         * Sprawdzamy czy już istnieje w w mapFolders wpis z kluczem o numerze danego
-         * folderu Jeśli istnieje pobieramy go i zapisujemy w zmiennej fileNumber
-         */
-        if (CounterMultiThread.mapFolders.get(directotry) != null) {
-            fileNumber = CounterMultiThread.mapFolders.get(directotry);
+    @SneakyThrows
+    private void copyOneFile(File destination,FileRow fileRow) {
+        if (!fileRow.isCopied()) {
+            String destinationFile = destination.getAbsolutePath()
+                    + File.separatorChar
+                    + fileRow.getCreationDateAsPrettyString()
+                    + File.separatorChar
+                    + fileRow.getThisDayPhotoCount()
+                    + fileRow.getExtension();
+
+            FileUtils.copyFile(new File(fileRow.getAbsolutPathToFile()), new File(destinationFile));
+            fileRow.setCopied(true);
         }
-        /**
-         * iterujemy zmienną fileNumber i umieszczamy w mapFolders używając
-         * odpowiedniego klucza
-         */
-        fileNumber++;
-        CounterMultiThread.mapFolders.put(directotry, fileNumber);
-        /**
-         * Tworzymy ciąg znaków z nazwą pliku i następnie zwracamy ją
-         */
-        String fileToCreate = String.valueOf(fileNumber) + "." + extension;
-        return fileToCreate;
     }
-
-
-
 
     public void run() {
         System.out.println("Wątek numer " + this.number + " rozpoczął działanie");
-//        String fileName;
-//        /**
-//         * Blokujemy dostęp do mapFolders w celu zsynchronizowania tego obiektu
-//         */
-//        synchronized (CounterMultiThread.mapFolders) {
-//            fileName = getNewFileName(this.destinationFolderPath, extension);
-//        }
-//        String fileToCreatePath = this.destinationFolderPath + FileExtended.separatorChar + fileName;
-//        FileExtended fileToCreate = new FileExtended(fileToCreatePath);
-//        FileExtended source = new FileExtended(this.sourceFilePath);
-//        try {
-//            source.copyFile(fileToCreate);
-//        } catch (IOException e) {
-//            // TODO Auto-generated catch block
-//            e.printStackTrace();
-//        }
+        copyOneFile(destination, fileRow);
         System.out.println("Wątek numer " + this.number + " zakończył działanie");
     }
 }

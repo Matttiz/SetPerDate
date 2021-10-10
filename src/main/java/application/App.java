@@ -7,9 +7,12 @@ import java.io.File;
 
 public class App {
     public static void main(String[] args) {
+        int threadNumber = 4;
         String path =  System.getProperty("user.dir");
         File source = new File(path + "/src/test/resources/source");
         File destination = new File(path + "/src/test/resources/destination");
+
+
         CatalogContent catalogContent = new CatalogContent(source);
         catalogContent.setDestinationFileName();
         catalogContent.print();
@@ -19,7 +22,7 @@ public class App {
         destinationStructure.removeDuplicates();
 
 
-        destinationStructure.copyFile(destination);
+        destinationStructure.copyFile(destination, threadNumber);
         catalogContent.print();
 
     }
