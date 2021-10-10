@@ -16,13 +16,12 @@ import java.util.stream.Collectors;
 public class CatalogContent {
     private File source;
     private List<FileRow> list = new ArrayList<>();
+    private static final String[] extensions = {"png","jpg"};
 
 
     @SneakyThrows
     public CatalogContent(File source) {
         this.source = source;
-        File[] listOfFiles = this.source.listFiles();
-        FileRow fileRow;
         list.addAll(findFiles(source));
         sort();
     }
@@ -91,14 +90,13 @@ public class CatalogContent {
     public List<FileRow> findFiles(File fileToCheck){
         File[] listOfFiles = fileToCheck.listFiles();
         List<FileRow> list = new ArrayList<>();
-        List<FileRow> list2 = new ArrayList<>();
         FileRow fileRow;
         for (File file : listOfFiles) {
             if(file.isDirectory()){
                 list.addAll(findFiles(file));
             }else {
                 String extension = file.getName().substring(file.getName().lastIndexOf(".") + 1);
-                if(extension.equals("png") || extension.equals("jpg")) {
+                if(containsExtension(extension)) {
                     BasicFileAttributes attributes = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
                     FileTime time = attributes.creationTime();
                     fileRow = new FileRow(file, time);
@@ -107,5 +105,41 @@ public class CatalogContent {
             }
         }
         return list;
+    }
+
+    public boolean containsExtension(String extension){
+        for(String array:extensions){
+            if(extension.equals(array)){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @SneakyThrows
+    public void addFilesFromDestinationToSource(File fileToCheck){
+        File[] listOfFiles = fileToCheck.listFiles();
+        List<FileRow> list = new ArrayList<>();
+        FileRow fileRow;
+        for (File file : listOfFiles) {
+            if(file.isDirectory()){
+                list.addAll(findFiles(file));
+            }else {
+                String extension = file.getName().substring(file.getName().lastIndexOf(".") + 1);
+                if(containsExtension(extension)) {
+                    BasicFileAttributes attributes = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
+                    FileTime time = attributes.creationTime();
+                    File destination = new File(
+                            file.getAbsoluteFile().getAbsolutePath().substring(0,
+                                    file.getAbsoluteFile().getAbsolutePath().lastIndexOf(".")
+                            ) + "a." + extension
+                    );
+                    file.renameTo(destination);
+                    fileRow = new FileRow(destination, time);
+                    list.add(fileRow);
+                }
+            }
+        }
+        list.addAll(list);
     }
 }

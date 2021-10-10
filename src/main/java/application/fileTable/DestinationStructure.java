@@ -21,6 +21,9 @@ public class DestinationStructure {
                 directory.mkdir();
                 destinationSubDirectory.add(directory);
             }
+            if(directory.exists()){
+                catalogContent.addFilesFromDestinationToSource(directory);
+            }
         }
     }
 

@@ -11,6 +11,7 @@ import java.util.Date;
 public class FileRow {
 
     private String absolutPathToFile;
+    private long size;
     private Date creation;
     private int thisDayPhotoCount;
     private boolean copied;
@@ -27,6 +28,7 @@ public class FileRow {
     @SneakyThrows
     public FileRow(File file, FileTime time){
         absolutPathToFile  = file.getAbsoluteFile().getAbsolutePath();
+        size = file.getTotalSpace();
         creation = new Date(time.toMillis());
     }
 
@@ -72,6 +74,10 @@ public class FileRow {
         public int compare(FileRow a, FileRow b) {
             return a.getCreation().compareTo(b.getCreation());
         }
+    }
+
+    public long getSize() {
+        return size;
     }
 
     public String getExtension(){
