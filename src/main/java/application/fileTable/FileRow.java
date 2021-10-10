@@ -7,6 +7,10 @@ import java.nio.file.attribute.FileTime;
 import java.text.SimpleDateFormat;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 public class FileRow {
 
@@ -14,6 +18,7 @@ public class FileRow {
     private long size;
     private Date creation;
     private int thisDayPhotoCount;
+    private File file;
     private boolean copied;
     private static String pattern = "yyyy-MM-dd HH:mm:ss";
     private static String patternDate = "yyyy-MM-dd";
@@ -27,9 +32,10 @@ public class FileRow {
 
     @SneakyThrows
     public FileRow(File file, FileTime time){
-        absolutPathToFile  = file.getAbsoluteFile().getAbsolutePath();
-        size = file.getTotalSpace();
-        creation = new Date(time.toMillis());
+        this.absolutPathToFile  = file.getAbsoluteFile().getAbsolutePath();
+        this.size = file.getTotalSpace();
+        this.creation = new Date(time.toMillis());
+        this.file = file;
     }
 
 
@@ -69,6 +75,10 @@ public class FileRow {
         this.copied = copied;
     }
 
+    public File getFile() {
+        return file;
+    }
+
     public static class sortItems implements Comparator<FileRow> {
         @Override
         public int compare(FileRow a, FileRow b) {
@@ -83,4 +93,26 @@ public class FileRow {
     public String getExtension(){
         return getAbsolutPathToFile().substring(getAbsolutPathToFile().lastIndexOf("."));
     }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        final FileRow fileRow = (FileRow) obj;
+        if (this == fileRow) {
+            return true;
+        } else {
+            return (this.getCreation().equals(fileRow.getCreation()) && this.getSize() == fileRow.getSize());
+        }
+    }
+
+//    @Override
+//    public int hashCode() {
+//        int hashno = 7;
+//        hashno = 13 * hashno + (name == null ? 0 : name.hashCode());
+//        return hashno;
+//    }
+
+
 }

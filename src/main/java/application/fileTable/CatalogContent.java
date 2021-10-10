@@ -7,15 +7,20 @@ import java.nio.file.Files;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import static java.util.Comparator.*;
 
 public class CatalogContent {
     private File source;
     private List<FileRow> list = new ArrayList<>();
+    private List<FileRow> destination = new ArrayList<>();
     private static final String[] extensions = {"png","jpg"};
 
 
@@ -23,7 +28,6 @@ public class CatalogContent {
     public CatalogContent(File source) {
         this.source = source;
         list.addAll(findFiles(source));
-        sort();
     }
 
     public File getSource() {
@@ -35,6 +39,15 @@ public class CatalogContent {
     }
 
     public void sort(){
+        List<FileRow> uniqueList = list.stream().filter(distinctByKeys(FileRow::getCreation,FileRow::getSize)).collect(Collectors.toList());
+
+
+        List<FileRow> differences = list.stream()
+                .filter(element -> uniqueList.contains(element))
+                .collect(Collectors.toList());
+        for(FileRow fileRow: differences){
+            fileRow.getFile().delete();
+        }
         Collections.sort(list, new FileRow.sortItems());
     }
 
@@ -89,6 +102,13 @@ public class CatalogContent {
     @SneakyThrows
     public List<FileRow> findFiles(File fileToCheck){
         File[] listOfFiles = fileToCheck.listFiles();
+
+
+        for(int i = 0; i < listOfFiles.length; i++){
+            System.out.println(listOfFiles[i]);
+        }
+
+
         List<FileRow> list = new ArrayList<>();
         FileRow fileRow;
         for (File file : listOfFiles) {
@@ -118,28 +138,56 @@ public class CatalogContent {
 
     @SneakyThrows
     public void addFilesFromDestinationToSource(File fileToCheck){
+        List<FileRow> listToAdd = new ArrayList<>();
         File[] listOfFiles = fileToCheck.listFiles();
-        List<FileRow> list = new ArrayList<>();
         FileRow fileRow;
         for (File file : listOfFiles) {
             if(file.isDirectory()){
-                list.addAll(findFiles(file));
+                listToAdd.addAll(findFiles(file));
             }else {
                 String extension = file.getName().substring(file.getName().lastIndexOf(".") + 1);
                 if(containsExtension(extension)) {
                     BasicFileAttributes attributes = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
                     FileTime time = attributes.creationTime();
+                    System.out.println(file.getName());
                     File destination = new File(
                             file.getAbsoluteFile().getAbsolutePath().substring(0,
                                     file.getAbsoluteFile().getAbsolutePath().lastIndexOf(".")
                             ) + "a." + extension
                     );
-                    file.renameTo(destination);
-                    fileRow = new FileRow(destination, time);
-                    list.add(fileRow);
+//                    if(isNameEqualDate(file)) {
+                        file.renameTo(destination);
+                        fileRow = new FileRow(destination, time);
+                        listToAdd.add(fileRow);
+//                    }
                 }
             }
         }
-        list.addAll(list);
+        this.destination.addAll(listToAdd);
+    }
+
+
+    private boolean isNameEqualDate(File file){
+        Pattern pattern = Pattern.compile("^\\d{1,}$");
+        Matcher matcher = pattern.matcher(file.getAbsoluteFile().getAbsolutePath().substring(0,
+                file.getAbsoluteFile().getAbsolutePath().lastIndexOf(".")));
+        return matcher.find();
+    }
+
+
+    private static <T> Predicate<T> distinctByKeys(Function<? super T, ?>... keyExtractors) {
+
+        final Map<List<?>, Boolean> seen = new ConcurrentHashMap<>();
+
+        return t -> {
+
+            final List<?> keys = Arrays.stream(keyExtractors)
+                    .map(ke -> ke.apply(t))
+                    .collect(Collectors.toList());
+
+            return seen.putIfAbsent(keys, Boolean.TRUE) == null;
+
+        };
+
     }
 }

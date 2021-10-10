@@ -5,7 +5,13 @@ import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class DestinationStructure {
     List<File> destinationSubDirectory = new ArrayList<>();
@@ -17,6 +23,7 @@ public class DestinationStructure {
         List<String> list =this.catalogContent.getUniqueDatesList();
         for (String catalog: list){
             File directory = new File(destination.getAbsolutePath() + File.separatorChar + catalog);
+            System.out.println(directory.getName());
             if(!(directory.exists() && directory.isDirectory())){
                 directory.mkdir();
                 destinationSubDirectory.add(directory);
@@ -25,6 +32,7 @@ public class DestinationStructure {
                 catalogContent.addFilesFromDestinationToSource(directory);
             }
         }
+        catalogContent.sort();
     }
 
     @SneakyThrows
