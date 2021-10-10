@@ -35,6 +35,10 @@ public class DestinationStructure {
         catalogContent.sort();
     }
 
+    public void removeDuplicates(){
+        catalogContent.removeDuplicate();
+    }
+
     @SneakyThrows
     public void copyFile(File destination){
         String destinationFile;

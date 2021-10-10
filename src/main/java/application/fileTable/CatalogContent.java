@@ -39,16 +39,19 @@ public class CatalogContent {
     }
 
     public void sort(){
+        Collections.sort(list, new FileRow.sortItems());
+    }
+
+    public void removeDuplicate() {
         List<FileRow> uniqueList = list.stream().filter(distinctByKeys(FileRow::getCreation,FileRow::getSize)).collect(Collectors.toList());
 
 
         List<FileRow> differences = list.stream()
-                .filter(element -> uniqueList.contains(element))
+                .filter(element -> !uniqueList.contains(element))
                 .collect(Collectors.toList());
         for(FileRow fileRow: differences){
             fileRow.getFile().delete();
         }
-        Collections.sort(list, new FileRow.sortItems());
     }
 
     public void print(){
@@ -102,12 +105,6 @@ public class CatalogContent {
     @SneakyThrows
     public List<FileRow> findFiles(File fileToCheck){
         File[] listOfFiles = fileToCheck.listFiles();
-
-
-        for(int i = 0; i < listOfFiles.length; i++){
-            System.out.println(listOfFiles[i]);
-        }
-
 
         List<FileRow> list = new ArrayList<>();
         FileRow fileRow;
