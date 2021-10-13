@@ -28,6 +28,7 @@ public class CatalogContent {
     public CatalogContent(File source) {
         this.source = source;
         list.addAll(findFiles(source));
+        sort();
     }
 
     public File getSource() {
@@ -43,15 +44,33 @@ public class CatalogContent {
     }
 
     public void removeDuplicate() {
-        List<FileRow> uniqueList = list.stream().filter(distinctByKeys(FileRow::getCreation,FileRow::getSize)).collect(Collectors.toList());
+
+        List<FileRow> sumList = new ArrayList<>();
+        sumList.addAll(list);
+        sumList.addAll(destination);
 
 
-        List<FileRow> differences = list.stream()
-                .filter(element -> !uniqueList.contains(element))
-                .collect(Collectors.toList());
+
+        List<FileRow> uniqueList = sumList.stream().filter(distinctByKeys(FileRow::getCreation,FileRow::getSize)).collect(Collectors.toList());
+
+
+        List<FileRow> differences = new ArrayList<>();
+        sumList.removeAll(uniqueList);
+
+        differences = sumList;
+
+
+
+//        List<FileRow> differences = sumList.stream()
+//                .filter(element -> uniqueList.contains(element))
+//                .collect(Collectors.toList());
+
+
         for(FileRow fileRow: differences){
             fileRow.getFile().delete();
         }
+        Collections.sort(uniqueList, new FileRow.sortItems());
+        list = uniqueList;
     }
 
     public void print(){

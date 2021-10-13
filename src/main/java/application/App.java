@@ -14,12 +14,14 @@ public class App {
 
 
         CatalogContent catalogContent = new CatalogContent(source);
-        catalogContent.setDestinationFileName();
-        catalogContent.print();
+//        catalogContent.setDestinationFileName();
+//        catalogContent.print();
 
         DestinationStructure destinationStructure = new DestinationStructure(
                 destination, catalogContent);
         destinationStructure.removeDuplicates();
+        destinationStructure.setDestinationFileName();
+        destinationStructure.print();
 
 
         destinationStructure.copyFile(destination, threadNumber);
