@@ -15,8 +15,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static java.util.Comparator.*;
-
 public class CatalogContent {
     private File source;
     private List<FileRow> list = new ArrayList<>();
@@ -44,17 +42,14 @@ public class CatalogContent {
     }
 
     public void removeDuplicate() {
-
         List<FileRow> sumList = new ArrayList<>();
         sumList.addAll(list);
         sumList.addAll(destination);
 
         List<FileRow> uniqueList = sumList.stream().filter(distinctByKeys(FileRow::getCreation,FileRow::getSize)).collect(Collectors.toList());
-        List<FileRow> differences = new ArrayList<>();
+        List<FileRow> differences;
         sumList.removeAll(uniqueList);
-
         differences = sumList;
-
 
         for(FileRow fileRow: differences){
             fileRow.getFile().delete();
@@ -93,7 +88,6 @@ public class CatalogContent {
            }
         }
     }
-
 
     public boolean isSameDateTime(Calendar cal1, Calendar cal2) {
         return (cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR)
@@ -155,7 +149,6 @@ public class CatalogContent {
                 if(containsExtension(extension)) {
                     BasicFileAttributes attributes = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
                     FileTime time = attributes.creationTime();
-//                    System.out.println(file.getName());
                     File destination = new File(
                             file.getAbsoluteFile().getAbsolutePath().substring(0,
                                     file.getAbsoluteFile().getAbsolutePath().lastIndexOf(".")
@@ -172,7 +165,6 @@ public class CatalogContent {
         this.destination.addAll(listToAdd);
     }
 
-
     private boolean isNameEqualDate(File file){
         Pattern pattern = Pattern.compile("^\\d{1,}$");
         Matcher matcher = pattern.matcher(file.getAbsoluteFile().getAbsolutePath().substring(0,
@@ -180,20 +172,15 @@ public class CatalogContent {
         return matcher.find();
     }
 
-
     private static <T> Predicate<T> distinctByKeys(Function<? super T, ?>... keyExtractors) {
-
         final Map<List<?>, Boolean> seen = new ConcurrentHashMap<>();
 
         return t -> {
-
             final List<?> keys = Arrays.stream(keyExtractors)
                     .map(ke -> ke.apply(t))
                     .collect(Collectors.toList());
 
             return seen.putIfAbsent(keys, Boolean.TRUE) == null;
-
         };
-
     }
 }

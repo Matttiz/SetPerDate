@@ -108,13 +108,16 @@ public class FileRow {
     }
 
     public void copyFileAndSetCopied(File destination) throws IOException {
-        String destinationPath = destination.getAbsolutePath()
-                + File.separatorChar
-                + this.getCreationDateAsPrettyString()
-                + File.separatorChar
-                + this.getThisDayPhotoCount()
-                + this.getExtension();
-        FileUtils.copyFile(new File(this.getAbsolutPathToFile()), new File(destinationPath));
-        this.setCopied(true);
+        if (!this.isCopied()) {
+            String destinationFile = destination.getAbsolutePath()
+                    + File.separatorChar
+                    + this.getCreationDateAsPrettyString()
+                    + File.separatorChar
+                    + this.getThisDayPhotoCount()
+                    + this.getExtension();
+
+            FileUtils.copyFile(new File(this.getAbsolutPathToFile()), new File(destinationFile));
+            this.setCopied(true);
+        }
     }
 }

@@ -1,41 +1,30 @@
 package application.fileTable;
 
 import lombok.SneakyThrows;
-import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 
 public class CopyMultiThread implements Runnable{
 
-    private static int number = 0 ;
+    private static int number = 0;
+    private int actualNumber;
     private File destination;
     private FileRow fileRow;
     public CopyMultiThread(File destination, FileRow fileRow) {
         this.destination = destination;
         this.fileRow = fileRow;
         number += 1;
-        System.out.println(number);
+        actualNumber= number;
     }
 
     @SneakyThrows
     private void copyOneFile() {
-        if (!fileRow.isCopied()) {
-            String destinationFile = destination.getAbsolutePath()
-                    + File.separatorChar
-                    + fileRow.getCreationDateAsPrettyString()
-                    + File.separatorChar
-                    + fileRow.getThisDayPhotoCount()
-                    + fileRow.getExtension();
-
-            FileUtils.copyFile(new File(fileRow.getAbsolutPathToFile()), new File(destinationFile));
-            fileRow.setCopied(true);
-        }
+        fileRow.copyFileAndSetCopied(destination);
     }
 
     public void run() {
-        System.out.println("Wątek numer " + this.number + " rozpoczął działanie");
+        System.out.println("Wątek numer " + this.actualNumber + " rozpoczął działanie");
         copyOneFile();
-        fileRow.setCopied(true);
-        System.out.println("Wątek numer " + this.number + " zakończył działanie");
+        System.out.println("Wątek numer " + this.actualNumber + " zakończył działanie");
     }
 }

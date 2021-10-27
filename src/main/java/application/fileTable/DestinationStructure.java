@@ -19,7 +19,6 @@ public class DestinationStructure {
         List<String> list = this.catalogContent.getUniqueDatesList();
         for (String catalog: list) {
             File directory = new File(destination.getAbsolutePath() + File.separatorChar + catalog);
-            System.out.println(directory.getName());
             if (!(directory.exists() && directory.isDirectory())){
                 directory.mkdir();
                 destinationSubDirectory.add(directory);
@@ -40,7 +39,6 @@ public class DestinationStructure {
 
         for(FileRow fileRow : catalogContent.getList()){
             es.execute(new CopyMultiThread(destination,fileRow));
-            fileRow.copyFileAndSetCopied(destination);
         }
         es.shutdown();
         try {
