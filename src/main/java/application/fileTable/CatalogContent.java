@@ -60,12 +60,15 @@ public class CatalogContent {
 
     public void print(){
         System.out.println();
+        int i = 1;
         for(FileRow file : list){
             System.out.println(
+                     i + " " +
                     file.getCreationDateWithHoursAndMinutesAsPrettyString() + " "
                             + file.getThisDayPhotoCountFormatted() + " "
                             + file.isCopied() + " "
                             + file.getAbsolutPathToFile());
+            i++;
         }
     }
 

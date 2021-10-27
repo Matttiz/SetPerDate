@@ -109,6 +109,7 @@ public class FileRow {
 
     public void copyFileAndSetCopied(File destination) throws IOException {
         if (!this.isCopied()) {
+            this.setCopied(true);
             String destinationFile = destination.getAbsolutePath()
                     + File.separatorChar
                     + this.getCreationDateAsPrettyString()
@@ -117,7 +118,6 @@ public class FileRow {
                     + this.getExtension();
 
             FileUtils.copyFile(new File(this.getAbsolutPathToFile()), new File(destinationFile));
-            this.setCopied(true);
         }
     }
 }
