@@ -49,21 +49,11 @@ public class CatalogContent {
         sumList.addAll(list);
         sumList.addAll(destination);
 
-
-
         List<FileRow> uniqueList = sumList.stream().filter(distinctByKeys(FileRow::getCreation,FileRow::getSize)).collect(Collectors.toList());
-
-
         List<FileRow> differences = new ArrayList<>();
         sumList.removeAll(uniqueList);
 
         differences = sumList;
-
-
-
-//        List<FileRow> differences = sumList.stream()
-//                .filter(element -> uniqueList.contains(element))
-//                .collect(Collectors.toList());
 
 
         for(FileRow fileRow: differences){
@@ -165,17 +155,17 @@ public class CatalogContent {
                 if(containsExtension(extension)) {
                     BasicFileAttributes attributes = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
                     FileTime time = attributes.creationTime();
-                    System.out.println(file.getName());
+//                    System.out.println(file.getName());
                     File destination = new File(
                             file.getAbsoluteFile().getAbsolutePath().substring(0,
                                     file.getAbsoluteFile().getAbsolutePath().lastIndexOf(".")
                             ) + "a." + extension
                     );
-//                    if(isNameEqualDate(file)) {
+                    if(isNameEqualDate(file)) {
                         file.renameTo(destination);
                         fileRow = new FileRow(destination, time);
                         listToAdd.add(fileRow);
-//                    }
+                    }
                 }
             }
         }

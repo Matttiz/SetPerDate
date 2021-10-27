@@ -1,8 +1,10 @@
 package application.fileTable;
 
 import lombok.SneakyThrows;
+import org.apache.commons.io.FileUtils;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.attribute.FileTime;
 import java.text.SimpleDateFormat;
 import java.util.Comparator;
@@ -26,18 +28,16 @@ public class FileRow {
     private static SimpleDateFormat simpleDateFormatDate = new SimpleDateFormat(patternDate);
 
 
-    public FileRow(){
+    public FileRow() {
     }
 
-
     @SneakyThrows
-    public FileRow(File file, FileTime time){
-        this.absolutPathToFile  = file.getAbsoluteFile().getAbsolutePath();
+    public FileRow(File file, FileTime time) {
+        this.absolutPathToFile = file.getAbsoluteFile().getAbsolutePath();
         this.size = file.getTotalSpace();
         this.creation = new Date(time.toMillis());
         this.file = file;
     }
-
 
     public String getAbsolutPathToFile() {
         return absolutPathToFile;
@@ -90,7 +90,7 @@ public class FileRow {
         return size;
     }
 
-    public String getExtension(){
+    public String getExtension() {
         return getAbsolutPathToFile().substring(getAbsolutPathToFile().lastIndexOf("."));
     }
 
@@ -107,12 +107,14 @@ public class FileRow {
         }
     }
 
-//    @Override
-//    public int hashCode() {
-//        int hashno = 7;
-//        hashno = 13 * hashno + (name == null ? 0 : name.hashCode());
-//        return hashno;
-//    }
-
-
+    public void copyFileAndSetCopied(File destination) throws IOException {
+        String destinationPath = destination.getAbsolutePath()
+                + File.separatorChar
+                + this.getCreationDateAsPrettyString()
+                + File.separatorChar
+                + this.getThisDayPhotoCount()
+                + this.getExtension();
+        FileUtils.copyFile(new File(this.getAbsolutPathToFile()), new File(destinationPath));
+        this.setCopied(true);
+    }
 }

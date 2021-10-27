@@ -17,10 +17,8 @@ public class CopyMultiThread implements Runnable{
         System.out.println(number);
     }
 
-
-
     @SneakyThrows
-    private void copyOneFile(File destination,FileRow fileRow) {
+    private void copyOneFile() {
         if (!fileRow.isCopied()) {
             String destinationFile = destination.getAbsolutePath()
                     + File.separatorChar
@@ -36,7 +34,8 @@ public class CopyMultiThread implements Runnable{
 
     public void run() {
         System.out.println("Wątek numer " + this.number + " rozpoczął działanie");
-        copyOneFile(destination, fileRow);
+        copyOneFile();
+        fileRow.setCopied(true);
         System.out.println("Wątek numer " + this.number + " zakończył działanie");
     }
 }

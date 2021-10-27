@@ -21,7 +21,7 @@ public class App {
                 destination, catalogContent);
         destinationStructure.removeDuplicates();
         destinationStructure.setDestinationFileName();
-        destinationStructure.print();
+//        destinationStructure.print();
 
 
         destinationStructure.copyFile(destination, threadNumber);
