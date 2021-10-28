@@ -14,7 +14,7 @@ public class App {
 
         CatalogContent catalogContent = new CatalogContent(source);
         catalogContent.setDestinationFileName();
-        catalogContent.print();
+//        catalogContent.print();
 
         DestinationStructure destinationStructure = new DestinationStructure(
                 destination, catalogContent);

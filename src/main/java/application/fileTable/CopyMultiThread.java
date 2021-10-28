@@ -23,7 +23,8 @@ public class CopyMultiThread implements Runnable{
     }
 
     public void run() {
-        System.out.println("Wątek numer " + this.actualNumber + " rozpoczął działanie");
+        System.out.println("Wątek numer " + this.actualNumber + " rozpoczął działanie \n"
+                + fileRow.getAbsolutPathToFile());
         copyOneFile();
         System.out.println("Wątek numer " + this.actualNumber + " zakończył działanie");
     }

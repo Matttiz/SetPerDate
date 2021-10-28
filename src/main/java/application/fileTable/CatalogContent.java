@@ -46,7 +46,11 @@ public class CatalogContent {
         sumList.addAll(list);
         sumList.addAll(destination);
 
-        List<FileRow> uniqueList = sumList.stream().filter(distinctByKeys(FileRow::getCreation,FileRow::getSize)).collect(Collectors.toList());
+        List<FileRow> uniqueList =
+                sumList.stream()
+                        .filter(distinctByKeys(FileRow::getCreation,FileRow::getSize))
+                        .collect(Collectors.toList());
+
         List<FileRow> differences;
         sumList.removeAll(uniqueList);
         differences = sumList;
@@ -140,10 +144,11 @@ public class CatalogContent {
     }
 
     @SneakyThrows
-    public void addFilesFromDestinationToSource(File fileToCheck){
+    public void addFilesFromDestinationToSource(File catalogToCheck){
         List<FileRow> listToAdd = new ArrayList<>();
-        File[] listOfFiles = fileToCheck.listFiles();
+        File[] listOfFiles = catalogToCheck.listFiles();
         FileRow fileRow;
+        File destination;
         for (File file : listOfFiles) {
             if(file.isDirectory()){
                 listToAdd.addAll(findFiles(file));
@@ -152,7 +157,7 @@ public class CatalogContent {
                 if(containsExtension(extension)) {
                     BasicFileAttributes attributes = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
                     FileTime time = attributes.creationTime();
-                    File destination = new File(
+                    destination = new File(
                             file.getAbsoluteFile().getAbsolutePath().substring(0,
                                     file.getAbsoluteFile().getAbsolutePath().lastIndexOf(".")
                             ) + "a." + extension
@@ -170,7 +175,7 @@ public class CatalogContent {
 
     private boolean isNameEqualDate(File file){
         Pattern pattern = Pattern.compile("^\\d{1,}$");
-        Matcher matcher = pattern.matcher(file.getAbsoluteFile().getAbsolutePath().substring(0,
+        Matcher matcher = pattern.matcher(file.getAbsoluteFile().getAbsolutePath().substring(file.getAbsoluteFile().getAbsolutePath().lastIndexOf("/") + 1,
                 file.getAbsoluteFile().getAbsolutePath().lastIndexOf(".")));
         return matcher.find();
     }
