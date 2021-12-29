@@ -37,9 +37,6 @@ public class DestinationStructure {
                         destinationDirectoryFile.getPath()
                                         .substring(destinationDirectoryFile.getPath().lastIndexOf(File.separator))))
                 .sorted(Comparator.naturalOrder());
-        for(File file: destinationSubDirectory){
-            System.out.println(file.getPath());
-        }
     }
 
     public void removeDuplicates(){

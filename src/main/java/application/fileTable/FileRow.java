@@ -112,7 +112,6 @@ public class FileRow {
                     + File.separatorChar
                     + this.getThisDayPhotoCount()
                     + this.getExtension();
-            System.out.println(this.getAbsolutPathToFile() + "        " + destinationFile);
             FileUtils.copyFile(new File(this.getAbsolutPathToFile()), new File(destinationFile));
         }
     }

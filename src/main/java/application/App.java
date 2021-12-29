@@ -9,12 +9,13 @@ public class App {
     public static void main(String[] args) {
         int threadNumber = 4;
         String path =  System.getProperty("user.dir");
+//        File source = new File("/home/matti/Obrazy/Zdjęcia");
         File source = new File(path + "/src/test/resources/source2");
-        File destination = new File(path + "/src/test/resources/destination2");
+        File destination = new File(path + "/src/test/resources/destination3");
 
         CatalogContent catalogContent = new CatalogContent(source);
         catalogContent.setDestinationFileName();
-        catalogContent.print();
+//        catalogContent.print();
 
         DestinationStructure destinationStructure = new DestinationStructure(
                 destination, catalogContent);
