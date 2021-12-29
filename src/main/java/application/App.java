@@ -18,6 +18,7 @@ public class App {
 
         DestinationStructure destinationStructure = new DestinationStructure(
                 destination, catalogContent);
+        destinationStructure.print();
         destinationStructure.removeDuplicates();
         destinationStructure.setDestinationFileName();
 //        destinationStructure.print();

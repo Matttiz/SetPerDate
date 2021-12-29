@@ -9,10 +9,6 @@ import java.nio.file.attribute.FileTime;
 import java.text.SimpleDateFormat;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
-import java.util.function.Predicate;
 
 public class FileRow {
 
@@ -22,10 +18,10 @@ public class FileRow {
     private int thisDayPhotoCount;
     private File file;
     private boolean copied;
-    private static String pattern = "yyyy-MM-dd HH:mm:ss";
-    private static String patternDate = "yyyy-MM-dd";
-    private static SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
-    private static SimpleDateFormat simpleDateFormatDate = new SimpleDateFormat(patternDate);
+    final private static String pattern = "yyyy-MM-dd HH:mm:ss";
+    final private static String patternDate = "yyyy-MM-dd";
+    final private static SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
+    final private static SimpleDateFormat simpleDateFormatDate = new SimpleDateFormat(patternDate);
 
 
     public FileRow() {
@@ -116,7 +112,7 @@ public class FileRow {
                     + File.separatorChar
                     + this.getThisDayPhotoCount()
                     + this.getExtension();
-
+            System.out.println(this.getAbsolutPathToFile() + "        " + destinationFile);
             FileUtils.copyFile(new File(this.getAbsolutPathToFile()), new File(destinationFile));
         }
     }

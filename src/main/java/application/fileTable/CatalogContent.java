@@ -7,10 +7,10 @@ import java.nio.file.Files;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
-import java.util.function.Predicate;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -46,7 +46,11 @@ public class CatalogContent {
         sumList.addAll(list);
         sumList.addAll(destination);
 
-        List<FileRow> uniqueList = sumList.stream().filter(distinctByKeys(FileRow::getCreation,FileRow::getSize)).collect(Collectors.toList());
+        List<FileRow> uniqueList = sumList
+                .stream()
+                .distinct()
+                .collect(Collectors.toList());
+
         List<FileRow> differences;
         sumList.removeAll(uniqueList);
         differences = sumList;
@@ -61,9 +65,11 @@ public class CatalogContent {
     public void print(){
         System.out.println();
         int i = 1;
+        String integer = "";
         for(FileRow file : list){
+            integer  = String.format("%3d", i);
             System.out.println(
-                     i + " " +
+                    integer + " " +
                     file.getCreationDateWithHoursAndMinutesAsPrettyString() + " "
                             + file.getThisDayPhotoCountFormatted() + " "
                             + file.isCopied() + " "
@@ -148,16 +154,17 @@ public class CatalogContent {
             if(file.isDirectory()){
                 listToAdd.addAll(findFiles(file));
             }else {
-                String extension = file.getName().substring(file.getName().lastIndexOf(".") + 1);
+                String fileAbsolutPath  = file.getAbsolutePath();
+                String extension = fileAbsolutPath.substring(fileAbsolutPath.lastIndexOf(".") + 1);
                 if(containsExtension(extension)) {
                     BasicFileAttributes attributes = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
                     FileTime time = attributes.creationTime();
                     File destination = new File(
-                            file.getAbsoluteFile().getAbsolutePath().substring(0,
-                                    file.getAbsoluteFile().getAbsolutePath().lastIndexOf(".")
+                fileAbsolutPath.substring(0,
+                        file.getAbsoluteFile().getAbsolutePath().lastIndexOf(".")
                             ) + "a." + extension
                     );
-                    if(isNameEqualDate(file)) {
+                    if(isNameEqualDate(fileAbsolutPath)) {
                         file.renameTo(destination);
                         fileRow = new FileRow(destination, time);
                         listToAdd.add(fileRow);
@@ -168,22 +175,10 @@ public class CatalogContent {
         this.destination.addAll(listToAdd);
     }
 
-    private boolean isNameEqualDate(File file){
+    private boolean isNameEqualDate(String fileAbsolutPath){
         Pattern pattern = Pattern.compile("^\\d{1,}$");
-        Matcher matcher = pattern.matcher(file.getAbsoluteFile().getAbsolutePath().substring(0,
-                file.getAbsoluteFile().getAbsolutePath().lastIndexOf(".")));
+        String fileName = fileAbsolutPath.substring(fileAbsolutPath.lastIndexOf(File.separator) + 1, fileAbsolutPath.lastIndexOf("."));
+        Matcher matcher = pattern.matcher(fileName);
         return matcher.find();
-    }
-
-    private static <T> Predicate<T> distinctByKeys(Function<? super T, ?>... keyExtractors) {
-        final Map<List<?>, Boolean> seen = new ConcurrentHashMap<>();
-
-        return t -> {
-            final List<?> keys = Arrays.stream(keyExtractors)
-                    .map(ke -> ke.apply(t))
-                    .collect(Collectors.toList());
-
-            return seen.putIfAbsent(keys, Boolean.TRUE) == null;
-        };
     }
 }
