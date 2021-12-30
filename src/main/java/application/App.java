@@ -16,6 +16,7 @@ public class App {
         catalogContent.print();
         catalogContent.createDirectoryTree();
         catalogContent.copyFile(threadNumber);
+        catalogContent.deletedDirectory();
 
     }
 }

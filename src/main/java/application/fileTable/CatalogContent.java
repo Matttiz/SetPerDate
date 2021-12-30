@@ -220,4 +220,20 @@ public class CatalogContent {
             }
         }
     }
+
+    public void deletedDirectory(){
+        for(FileRow file : destinationList){
+            file.getFile().delete();
+            goToParentDirectory(file.getFile());
+        }
+    }
+
+    public void goToParentDirectory(File file) {
+        File directory = new File(file.getParent());
+        if(directory.listFiles().length == 0){
+            directory.delete();
+            goToParentDirectory(directory);
+        }
+
+    }
 }
