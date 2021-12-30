@@ -7,27 +7,35 @@ import java.nio.file.Files;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.List;
+import java.time.LocalDate;
+import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class CatalogContent {
     private File source;
-    private List<FileRow> list = new ArrayList<>();
-    private List<FileRow> destination = new ArrayList<>();
-    private static final String[] extensions = {"png","jpg"};
+    private File destination;
+    private List<FileRow> sourceList = new ArrayList<>();
+    private List<FileRow> destinationList = new ArrayList<>();
+    private List<FileRow> toCopyList = new ArrayList<>();
+    private static final List<String> extensions = Arrays.asList("png", "jpg");
 
-    public CatalogContent(){
+    public CatalogContent() {
     }
 
     @SneakyThrows
-    public CatalogContent(File source) {
-        this.source = source;
-        list.addAll(findFiles(source));
+    public CatalogContent(File sourceCatalog, File destinationCatalog) {
+        this.source = sourceCatalog;
+        this.destination = destinationCatalog;
+        sourceList.addAll(findFiles(source));
+        addFilesFromDestination(destinationCatalog);
+        removeDuplicate();
+        setDestinationFileName();
         sort();
     }
 
@@ -35,65 +43,52 @@ public class CatalogContent {
         return source;
     }
 
-    public List<FileRow> getList() {
-        return list;
+    public List<FileRow> getSourceList() {
+        return sourceList;
     }
 
-    public void sort(){
-        Collections.sort(list, new FileRow.sortItems());
+    public void sort() {
+        Collections.sort(sourceList, new FileRow.sortItems());
     }
 
     public void removeDuplicate() {
-        List<FileRow> sumList = new ArrayList<>();
-        List<FileRow> differences = new ArrayList<>();
-        sumList.addAll(list);
-        sumList.addAll(destination);
-
-        for(FileRow destinationFile : destination){
-            for(FileRow sourceFile : list){
-                if(destinationFile.equals(sourceFile)) {
-                    differences.add(sourceFile);
-                    list.remove(sourceFile);
+        FileRow fileRow = new FileRow();
+        boolean deleted = false;
+        if (destination.exists()) {
+            for (FileRow destinationFile : destinationList) {
+                for (FileRow sourceFile : sourceList) {
+                    fileRow = sourceFile;
+                    if (destinationFile.getSize() == (sourceFile.getSize())
+                            && destinationFile.getCreation() == sourceFile.getCreation()
+                            && destinationFile.getExtension() == sourceFile.getExtension()) {
+                        sourceList.remove(sourceFile);
+                        deleted = true;
+                    }
+                }
+                if (!deleted) {
+                    toCopyList.add(fileRow);
+                    deleted = false;
                 }
             }
+        } else {
+            toCopyList.addAll(sourceList);
         }
-//        Collections.sort(list, new FileRow.sortItems());
     }
 
-    public void print(){
+    public void print() {
         System.out.println();
         int i = 1;
         String integer = "";
-        for(FileRow file : list){
-            integer  = String.format("%3d", i);
+        for (FileRow file : sourceList) {
+            integer = String.format("%3d", i);
             System.out.println(
                     integer + " " +
-                    file.getCreationDateWithHoursAndMinutesAsPrettyString() + " "
+                            file.getCreationDateWithHoursAndMinutesAsPrettyString() + " "
                             + file.getThisDayPhotoCountFormatted() + " "
                             + file.isCopied() + " "
                             + file.getAbsolutPathToFile()
             );
             i++;
-        }
-    }
-
-    public void setDestinationFileName(){
-        FileRow fileToCompare = list.get(0);
-        Calendar dateToCompare = Calendar.getInstance();
-        Calendar dateFromFile = Calendar.getInstance();
-        dateToCompare.setTime(fileToCompare.getCreation());
-
-        int index = 1;
-        for(FileRow file : list){
-            dateToCompare.setTime(fileToCompare.getCreation());
-            dateFromFile.setTime(file.getCreation());
-          if (isSameDateTime(dateToCompare,dateFromFile)){
-               file.setThisDayPhotoCount(index++);
-           }else{
-               index = 1;
-               file.setThisDayPhotoCount(index++);
-               fileToCompare = file;
-           }
         }
     }
 
@@ -103,81 +98,126 @@ public class CatalogContent {
                 && cal1.get(Calendar.DATE) == cal2.get(Calendar.DATE));
     }
 
-    public List<String> getUniqueDatesList(){
+    public List<String> getUniqueDatesList() {
         List<String> dates = new ArrayList<>();
         String pattern = "yyyy-MM-dd";
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
-        for(FileRow file : list) {
+        for (FileRow file : toCopyList) {
             dates.add(simpleDateFormat.format(file.getCreation()));
         }
         return dates.stream().distinct().collect(Collectors.toList());
     }
 
-    @SneakyThrows
-    public List<FileRow> findFiles(File fileToCheck){
-        File[] listOfFiles = fileToCheck.listFiles();
 
+    @SneakyThrows
+    private List<FileRow> findFiles(File fileToCheck) {
+        File[] listOfFiles = fileToCheck.listFiles();
         List<FileRow> list = new ArrayList<>();
         FileRow fileRow;
-        for (File file : listOfFiles) {
-            if(file.isDirectory()){
-                list.addAll(findFiles(file));
-            }else {
-                String extension = file.getName().substring(file.getName().lastIndexOf(".") + 1);
-                if(containsExtension(extension)) {
-                    BasicFileAttributes attributes = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
-                    FileTime time = attributes.creationTime();
-                    fileRow = new FileRow(file, time);
-                    list.add(fileRow);
+        if (fileToCheck.exists()) {
+            for (File file : listOfFiles) {
+                if (file.isDirectory()) {
+                    list.addAll(findFiles(file));
+                } else {
+                    String extension = file.getName().substring(file.getName().lastIndexOf(".") + 1);
+                    if (containsExtension(extension)) {
+                        BasicFileAttributes attributes = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
+                        FileTime time = attributes.creationTime();
+                        fileRow = new FileRow(file, time);
+                        list.add(fileRow);
+                    }
                 }
             }
         }
         return list;
     }
 
-    public boolean containsExtension(String extension){
-        for(String array:extensions){
-            if(extension.equals(array)){
-                return true;
-            }
-        }
-        return false;
+    private boolean containsExtension(String extension) {
+        return extensions.contains(extension);
     }
 
     @SneakyThrows
-    public void addFilesFromDestinationToSource(File fileToCheck){
+    public void addFilesFromDestination(File fileToCheck) {
         List<FileRow> listToAdd = new ArrayList<>();
         File[] listOfFiles = fileToCheck.listFiles();
         FileRow fileRow;
-        for (File file : listOfFiles) {
-            if(file.isDirectory()){
-                listToAdd.addAll(findFiles(file));
-            }else {
-                String fileAbsolutPath  = file.getAbsolutePath();
-                String extension = fileAbsolutPath.substring(fileAbsolutPath.lastIndexOf(".") + 1);
-                if(containsExtension(extension)) {
-                    BasicFileAttributes attributes = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
-                    FileTime time = attributes.creationTime();
-                    File destination = new File(
-                fileAbsolutPath.substring(0,
-                        file.getAbsoluteFile().getAbsolutePath().lastIndexOf(".")
-                            ) + "a." + extension
-                    );
-                    if(isNameEqualDate(fileAbsolutPath)) {
-                        file.renameTo(destination);
-                        fileRow = new FileRow(destination, time);
-                        listToAdd.add(fileRow);
+        if (fileToCheck.exists()) {
+            for (File file : listOfFiles) {
+                if (file.isDirectory()) {
+                    listToAdd.addAll(findFiles(file));
+                } else {
+                    String fileAbsolutPath = file.getAbsolutePath();
+                    String extension = fileAbsolutPath.substring(fileAbsolutPath.lastIndexOf(".") + 1);
+                    if (containsExtension(extension)) {
+                        BasicFileAttributes attributes = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
+                        FileTime time = attributes.creationTime();
+                        File destination = new File(
+                                fileAbsolutPath.substring(0,
+                                        file.getAbsoluteFile().getAbsolutePath().lastIndexOf(".")
+                                ) + "a." + extension
+                        );
+                        if (isNameEqualDate(fileAbsolutPath)) {
+                            file.renameTo(destination);
+                            fileRow = new FileRow(destination, time);
+                            listToAdd.add(fileRow);
+                        }
                     }
                 }
             }
         }
-        this.destination.addAll(listToAdd);
+        this.destinationList.addAll(listToAdd);
     }
 
-    private boolean isNameEqualDate(String fileAbsolutPath){
+    public void setDestinationFileName() {
+        FileRow fileToCompare = toCopyList.get(0);
+        Calendar dateToCompare = Calendar.getInstance();
+        Calendar dateFromFile = Calendar.getInstance();
+        dateToCompare.setTime(fileToCompare.getCreation());
+        int index = 1;
+        for (FileRow file : toCopyList) {
+            dateToCompare.setTime(fileToCompare.getCreation());
+            dateFromFile.setTime(file.getCreation());
+            if (isSameDateTime(dateToCompare, dateFromFile)) {
+                file.setThisDayPhotoCount(index++);
+            } else {
+                index = 1;
+                file.setThisDayPhotoCount(index++);
+                fileToCompare = file;
+            }
+        }
+    }
+
+    private boolean isNameEqualDate(String fileAbsolutPath) {
         Pattern pattern = Pattern.compile("^\\d{1,}$");
         String fileName = fileAbsolutPath.substring(fileAbsolutPath.lastIndexOf(File.separator) + 1, fileAbsolutPath.lastIndexOf("."));
         Matcher matcher = pattern.matcher(fileName);
         return matcher.find();
+    }
+
+    @SneakyThrows
+    public void copyFile(int numberThreads) {
+        ExecutorService es = Executors.newFixedThreadPool(numberThreads);
+        for (FileRow fileRow : getSourceList()) {
+            es.execute(new CopyMultiThread(this.destination, fileRow));
+        }
+        es.shutdown();
+        try {
+            es.awaitTermination(25, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void createDirectoryTree() {
+        List<String> list = getUniqueDatesList();
+        Stream<LocalDate> dates = list.stream()
+                .map(name -> LocalDate.parse(name.substring(name.lastIndexOf(File.separator))))
+                .sorted(Comparator.naturalOrder());
+        for (String catalog : list) {
+            File directory = new File(destination.getAbsolutePath() + File.separatorChar + catalog);
+            if (!(directory.exists() && directory.isDirectory())) {
+                directory.mkdir();
+            }
+        }
     }
 }
