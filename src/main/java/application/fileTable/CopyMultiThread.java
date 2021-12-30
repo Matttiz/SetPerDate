@@ -19,12 +19,13 @@ public class CopyMultiThread implements Runnable{
 
     @SneakyThrows
     private void copyOneFile() {
-        fileRow.copyFileAndSetCopied(destination);
+        fileRow.copyFileAndSetCopied(destination, this.actualNumber);
     }
 
     public void run() {
-        System.out.println("Wątek numer " + this.actualNumber + " rozpoczął działanie");
+        String number = String.format("%4d", this.actualNumber);
+        System.out.println("Wątek numer " + number + " rozpoczął działanie");
         copyOneFile();
-        System.out.println("Wątek numer " + this.actualNumber + " zakończył działanie");
+        System.out.println("Wątek numer " + number + " zakończył działanie");
     }
 }

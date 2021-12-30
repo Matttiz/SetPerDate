@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 
 public class DestinationStructure {
     List<File> destinationSubDirectory = new ArrayList<>();
-    final private CatalogContent catalogContent;
+    private CatalogContent catalogContent;
 
     @SneakyThrows
     public DestinationStructure(File destination, CatalogContent catalogContent){
@@ -27,9 +27,10 @@ public class DestinationStructure {
             if (!(directory.exists() && directory.isDirectory())){
                 directory.mkdir();
                 destinationSubDirectory.add(directory);
-            }
-            if (directory.exists()){
-                catalogContent.addFilesFromDestinationToSource(directory);
+            }else {
+                if (directory.exists()) {
+                    catalogContent.addFilesFromDestinationToSource(directory);
+                }
             }
         }
         destinationSubDirectory.stream()

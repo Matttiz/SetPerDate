@@ -21,6 +21,8 @@ public class CatalogContent {
     private List<FileRow> destination = new ArrayList<>();
     private static final String[] extensions = {"png","jpg"};
 
+    public CatalogContent(){
+    }
 
     @SneakyThrows
     public CatalogContent(File source) {
@@ -43,23 +45,19 @@ public class CatalogContent {
 
     public void removeDuplicate() {
         List<FileRow> sumList = new ArrayList<>();
+        List<FileRow> differences = new ArrayList<>();
         sumList.addAll(list);
         sumList.addAll(destination);
 
-        List<FileRow> uniqueList = sumList
-                .stream()
-                .distinct()
-                .collect(Collectors.toList());
-
-        List<FileRow> differences;
-        sumList.removeAll(uniqueList);
-        differences = sumList;
-
-        for(FileRow fileRow: differences){
-            fileRow.getFile().delete();
+        for(FileRow destinationFile : destination){
+            for(FileRow sourceFile : list){
+                if(destinationFile.equals(sourceFile)) {
+                    differences.add(sourceFile);
+                    list.remove(sourceFile);
+                }
+            }
         }
-        Collections.sort(uniqueList, new FileRow.sortItems());
-        list = uniqueList;
+//        Collections.sort(list, new FileRow.sortItems());
     }
 
     public void print(){
@@ -73,7 +71,8 @@ public class CatalogContent {
                     file.getCreationDateWithHoursAndMinutesAsPrettyString() + " "
                             + file.getThisDayPhotoCountFormatted() + " "
                             + file.isCopied() + " "
-                            + file.getAbsolutPathToFile());
+                            + file.getAbsolutPathToFile()
+            );
             i++;
         }
     }
