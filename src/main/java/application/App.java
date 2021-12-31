@@ -9,7 +9,8 @@ public class App {
         int threadNumber = 1;
         String path =  System.getProperty("user.dir");
 //        File source = new File("/home/matti/Obrazy/Zdjęcia");
-        File source = new File(path + "/src/test/resources/source2");
+//        File source = new File(path + "/src/test/resources/source2");
+        File source = new File(path + "/src/test/resources/source3");
         File destination = new File(path + "/src/test/resources/destination3");
 
         CatalogContent catalogContent = new CatalogContent(source,destination);
@@ -17,6 +18,5 @@ public class App {
         catalogContent.createDirectoryTree();
         catalogContent.copyFile(threadNumber);
         catalogContent.deletedDirectory();
-
     }
 }

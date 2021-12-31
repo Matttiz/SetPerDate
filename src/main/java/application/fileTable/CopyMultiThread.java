@@ -4,22 +4,26 @@ import lombok.SneakyThrows;
 
 import java.io.File;
 
-public class CopyMultiThread implements Runnable{
+public class CopyMultiThread implements Runnable {
 
     private static int number = 0;
     private int actualNumber;
     private File destination;
     private FileRow fileRow;
+
     public CopyMultiThread(File destination, FileRow fileRow) {
         this.destination = destination;
         this.fileRow = fileRow;
         number += 1;
-        actualNumber= number;
+        actualNumber = number;
     }
 
     @SneakyThrows
     private void copyOneFile() {
-        fileRow.copyFileAndSetCopied(destination, this.actualNumber);
+        if (!fileRow.getFile().getAbsolutePath().equals(destination.getAbsolutePath())) {
+            System.out.println("Kopiuję " + fileRow.getFile().getAbsolutePath());
+            fileRow.copyFileAndSetCopied(destination, this.actualNumber);
+        }
     }
 
     public void run() {

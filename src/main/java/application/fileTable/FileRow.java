@@ -14,7 +14,7 @@ public class FileRow {
 
     private String absolutPathToFile;
     private long size;
-    private Date creation;
+    private Date lastModificationDate;
     private int thisDayPhotoCount;
     private File file;
     private boolean copied;
@@ -31,7 +31,7 @@ public class FileRow {
     public FileRow(File file, FileTime time) {
         this.absolutPathToFile = file.getAbsoluteFile().getAbsolutePath();
         this.size = file.getTotalSpace();
-        this.creation = new Date(time.toMillis());
+        this.lastModificationDate = new Date(time.toMillis());
         this.file = file;
     }
 
@@ -39,16 +39,16 @@ public class FileRow {
         return absolutPathToFile;
     }
 
-    public Date getCreation() {
-        return creation;
+    public Date getLastModificationDate() {
+        return lastModificationDate;
     }
 
-    public String getCreationDateWithHoursAndMinutesAsPrettyString() {
-        return simpleDateFormat.format(creation);
+    public String getLastModificationDateWithHoursAndMinutesAsPrettyString() {
+        return simpleDateFormat.format(lastModificationDate);
     }
 
-    public String getCreationDateAsPrettyString() {
-        return simpleDateFormatDate.format(creation);
+    public String getLastModificationDateAsPrettyString() {
+        return simpleDateFormatDate.format(lastModificationDate);
     }
 
     public int getThisDayPhotoCount() {
@@ -78,7 +78,7 @@ public class FileRow {
     public static class sortItems implements Comparator<FileRow> {
         @Override
         public int compare(FileRow a, FileRow b) {
-            return a.getCreation().compareTo(b.getCreation());
+            return a.getLastModificationDate().compareTo(b.getLastModificationDate());
         }
     }
 
@@ -99,7 +99,9 @@ public class FileRow {
         if (this == fileRow) {
             return true;
         } else {
-            return (this.getCreation().equals(fileRow.getCreation()) && this.getSize() == fileRow.getSize());
+            return (this.getLastModificationDate().equals(fileRow.getLastModificationDate())
+                    && this.getSize() == fileRow.getSize()
+                    && this.getExtension().equals(fileRow.getExtension()));
         }
     }
 
@@ -108,7 +110,7 @@ public class FileRow {
             this.setCopied(true);
             String destinationFile = destination.getAbsolutePath()
                     + File.separatorChar
-                    + this.getCreationDateAsPrettyString()
+                    + this.getLastModificationDateAsPrettyString()
                     + File.separatorChar
                     + this.getThisDayPhotoCount()
                     + this.getExtension();

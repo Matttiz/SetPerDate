@@ -7,15 +7,14 @@ import java.nio.file.Files;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class CatalogContent {
     private File source;
@@ -34,56 +33,40 @@ public class CatalogContent {
         this.destination = destinationCatalog;
         sourceList.addAll(findFiles(source));
         addFilesFromDestination(destinationCatalog);
-        removeDuplicate();
-        setDestinationFileName();
+        integrationList();
         sort();
+        setDestinationFileName();
     }
 
-    public File getSource() {
-        return source;
-    }
-
-    public List<FileRow> getSourceList() {
-        return sourceList;
+    public List<FileRow> getToCopyList() {
+        return toCopyList;
     }
 
     public void sort() {
-        Collections.sort(sourceList, new FileRow.sortItems());
+        Collections.sort(toCopyList, new FileRow.sortItems());
     }
 
-    public void removeDuplicate() {
-        FileRow fileRow = new FileRow();
-        boolean deleted = false;
-        if (destination.exists()) {
-            for (FileRow destinationFile : destinationList) {
-                for (FileRow sourceFile : sourceList) {
-                    fileRow = sourceFile;
-                    if (destinationFile.getSize() == (sourceFile.getSize())
-                            && destinationFile.getCreation() == sourceFile.getCreation()
-                            && destinationFile.getExtension() == sourceFile.getExtension()) {
-                        sourceList.remove(sourceFile);
-                        deleted = true;
-                    }
-                }
-                if (!deleted) {
-                    toCopyList.add(fileRow);
-                    deleted = false;
-                }
-            }
-        } else {
-            toCopyList.addAll(sourceList);
-        }
+    public void integrationList() {
+        toCopyList.addAll(destinationList);
+        toCopyList.addAll(sourceList);
+        toCopyList = toCopyList.stream()
+                .filter(distinctByKey(p -> p.getLastModificationDateWithHoursAndMinutesAsPrettyString() + " " + p.getExtension() + " " + p.getSize())).collect(Collectors.toList());
+    }
+
+    public static <T> Predicate<T> distinctByKey(Function<? super T, Object> keyExtractor) {
+        Map<Object, Boolean> map = new ConcurrentHashMap<>();
+        return t -> map.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
     }
 
     public void print() {
         System.out.println();
         int i = 1;
         String integer = "";
-        for (FileRow file : sourceList) {
+        for (FileRow file : toCopyList) {
             integer = String.format("%3d", i);
             System.out.println(
                     integer + " " +
-                            file.getCreationDateWithHoursAndMinutesAsPrettyString() + " "
+                            file.getLastModificationDateWithHoursAndMinutesAsPrettyString() + " "
                             + file.getThisDayPhotoCountFormatted() + " "
                             + file.isCopied() + " "
                             + file.getAbsolutPathToFile()
@@ -103,7 +86,7 @@ public class CatalogContent {
         String pattern = "yyyy-MM-dd";
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
         for (FileRow file : toCopyList) {
-            dates.add(simpleDateFormat.format(file.getCreation()));
+            dates.add(simpleDateFormat.format(file.getLastModificationDate()));
         }
         return dates.stream().distinct().collect(Collectors.toList());
     }
@@ -122,7 +105,7 @@ public class CatalogContent {
                     String extension = file.getName().substring(file.getName().lastIndexOf(".") + 1);
                     if (containsExtension(extension)) {
                         BasicFileAttributes attributes = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
-                        FileTime time = attributes.creationTime();
+                        FileTime time = attributes.lastModifiedTime();
                         fileRow = new FileRow(file, time);
                         list.add(fileRow);
                     }
@@ -150,17 +133,15 @@ public class CatalogContent {
                     String extension = fileAbsolutPath.substring(fileAbsolutPath.lastIndexOf(".") + 1);
                     if (containsExtension(extension)) {
                         BasicFileAttributes attributes = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
-                        FileTime time = attributes.creationTime();
+                        FileTime time = attributes.lastModifiedTime();
                         File destination = new File(
                                 fileAbsolutPath.substring(0,
                                         file.getAbsoluteFile().getAbsolutePath().lastIndexOf(".")
                                 ) + "a." + extension
                         );
-                        if (isNameEqualDate(fileAbsolutPath)) {
-                            file.renameTo(destination);
-                            fileRow = new FileRow(destination, time);
-                            listToAdd.add(fileRow);
-                        }
+                        file.renameTo(destination);
+                        fileRow = new FileRow(destination, time);
+                        listToAdd.add(fileRow);
                     }
                 }
             }
@@ -169,35 +150,30 @@ public class CatalogContent {
     }
 
     public void setDestinationFileName() {
-        FileRow fileToCompare = toCopyList.get(0);
-        Calendar dateToCompare = Calendar.getInstance();
-        Calendar dateFromFile = Calendar.getInstance();
-        dateToCompare.setTime(fileToCompare.getCreation());
-        int index = 1;
-        for (FileRow file : toCopyList) {
-            dateToCompare.setTime(fileToCompare.getCreation());
-            dateFromFile.setTime(file.getCreation());
-            if (isSameDateTime(dateToCompare, dateFromFile)) {
-                file.setThisDayPhotoCount(index++);
-            } else {
-                index = 1;
-                file.setThisDayPhotoCount(index++);
-                fileToCompare = file;
+        if (toCopyList.size() > 0) {
+            FileRow fileToCompare = toCopyList.get(0);
+            Calendar dateToCompare = Calendar.getInstance();
+            Calendar dateFromFile = Calendar.getInstance();
+            dateToCompare.setTime(fileToCompare.getLastModificationDate());
+            int index = 1;
+            for (FileRow file : toCopyList) {
+                dateToCompare.setTime(fileToCompare.getLastModificationDate());
+                dateFromFile.setTime(file.getLastModificationDate());
+                if (isSameDateTime(dateToCompare, dateFromFile)) {
+                    file.setThisDayPhotoCount(index++);
+                } else {
+                    index = 1;
+                    file.setThisDayPhotoCount(index++);
+                    fileToCompare = file;
+                }
             }
         }
-    }
-
-    private boolean isNameEqualDate(String fileAbsolutPath) {
-        Pattern pattern = Pattern.compile("^\\d{1,}$");
-        String fileName = fileAbsolutPath.substring(fileAbsolutPath.lastIndexOf(File.separator) + 1, fileAbsolutPath.lastIndexOf("."));
-        Matcher matcher = pattern.matcher(fileName);
-        return matcher.find();
     }
 
     @SneakyThrows
     public void copyFile(int numberThreads) {
         ExecutorService es = Executors.newFixedThreadPool(numberThreads);
-        for (FileRow fileRow : getSourceList()) {
+        for (FileRow fileRow : getToCopyList()) {
             es.execute(new CopyMultiThread(this.destination, fileRow));
         }
         es.shutdown();
@@ -210,9 +186,6 @@ public class CatalogContent {
 
     public void createDirectoryTree() {
         List<String> list = getUniqueDatesList();
-        Stream<LocalDate> dates = list.stream()
-                .map(name -> LocalDate.parse(name.substring(name.lastIndexOf(File.separator))))
-                .sorted(Comparator.naturalOrder());
         for (String catalog : list) {
             File directory = new File(destination.getAbsolutePath() + File.separatorChar + catalog);
             if (!(directory.exists() && directory.isDirectory())) {
@@ -221,19 +194,20 @@ public class CatalogContent {
         }
     }
 
-    public void deletedDirectory(){
-        for(FileRow file : destinationList){
-            file.getFile().delete();
-            goToParentDirectory(file.getFile());
+    public void deletedDirectory() {
+        for (FileRow fileRow : destinationList) {
+            if (toCopyList.contains(fileRow)) {
+                fileRow.getFile().delete();
+                goToParentDirectory(fileRow.getFile());
+            }
         }
     }
 
     public void goToParentDirectory(File file) {
         File directory = new File(file.getParent());
-        if(directory.listFiles().length == 0){
+        if (directory.listFiles().length == 0) {
             directory.delete();
             goToParentDirectory(directory);
         }
-
     }
 }
