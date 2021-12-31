@@ -20,10 +20,7 @@ public class CopyMultiThread implements Runnable {
 
     @SneakyThrows
     private void copyOneFile() {
-        if (!fileRow.getFile().getAbsolutePath().equals(destination.getAbsolutePath())) {
-            System.out.println("Kopiuję " + fileRow.getFile().getAbsolutePath());
-            fileRow.copyFileAndSetCopied(destination, this.actualNumber);
-        }
+        fileRow.copyFileAndSetCopied(destination);
     }
 
     public void run() {

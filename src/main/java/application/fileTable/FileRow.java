@@ -105,7 +105,7 @@ public class FileRow {
         }
     }
 
-    public void copyFileAndSetCopied(File destination, int number) throws IOException {
+    public void copyFileAndSetCopied(File destination) throws IOException {
         if (!this.isCopied()) {
             this.setCopied(true);
             String destinationFile = destination.getAbsolutePath()
@@ -114,8 +114,17 @@ public class FileRow {
                     + File.separatorChar
                     + this.getThisDayPhotoCount()
                     + this.getExtension();
-//            System.out.println(number + "        " +  this.isCopied() + "        " + this.getAbsolutPathToFile() + "        " + destinationFile);
-            FileUtils.copyFile(new File(this.getAbsolutPathToFile()), new File(destinationFile));
+
+            if (!this.getFile().getAbsolutePath().equals(destinationFile)) {
+                System.out.println("Kopiuję " + this.getFile().getAbsolutePath() + " do " + destinationFile);
+                FileUtils.copyFile(new File(this.getAbsolutPathToFile()), new File(destinationFile));
+            }
+
+            if (!destinationFile.equals(this.getFile().getAbsolutePath())
+                    && destinationFile.contains(destination.getAbsolutePath())
+                    && !destinationFile.equals(destination.getAbsolutePath())) {
+                FileUtils.deleteQuietly(this.getFile());
+            }
         }
     }
 }

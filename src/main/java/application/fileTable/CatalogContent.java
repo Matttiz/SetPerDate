@@ -195,8 +195,18 @@ public class CatalogContent {
     }
 
     public void deletedDirectory() {
+        System.out.println();
+        for( FileRow fileRow: toCopyList){
+            System.out.println(fileRow.getFile().getAbsolutePath());
+        }
+
+        System.out.println();
+
+
         for (FileRow fileRow : destinationList) {
-            if (toCopyList.contains(fileRow)) {
+            System.out.println(fileRow.getFile().getAbsolutePath());
+            if (!toCopyList.contains(fileRow)) {
+                System.out.println(fileRow.getFile().getAbsolutePath());
                 fileRow.getFile().delete();
                 goToParentDirectory(fileRow.getFile());
             }
