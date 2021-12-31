@@ -8,10 +8,8 @@ public class App {
     public static void main(String[] args) {
         int threadNumber = 6;
         String path = System.getProperty("user.dir");
-//        File source = new File("/home/matti/Obrazy/Zdjęcia");
-        File source = new File(path + "/src/test/resources/source2");
-//        File source = new File(path + "/src/test/resources/source3");
-        File destination = new File(path + "/src/test/resources/destination2");
+        File source = new File( "/media/matti/Wazne/Kopie/");
+        File destination = new File("/media/matti/Wazne/Zdjęcia_segregacja");
 
         CatalogContent catalogContent = new CatalogContent(source, destination);
 //        catalogContent.print();

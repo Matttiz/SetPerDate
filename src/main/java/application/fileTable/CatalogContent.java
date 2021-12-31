@@ -193,7 +193,8 @@ public class CatalogContent {
     public void deletedDirectory() {
         if (destinationList.size() != 0) {
             for (FileRow fileRow : destinationList) {
-                if (fileRow.getAbsolutPathToDestination().contains(destination.getAbsolutePath())) {
+                if (fileRow.getAbsolutPathToDestination().contains(destination.getAbsolutePath())
+                        && !fileRow.getAbsolutPathToDestination().equals(fileRow.getAbsolutPathToFile())) {
                     fileRow.getFile().delete();
                     goToParentDirectory(fileRow.getFile());
                 }
@@ -203,9 +204,11 @@ public class CatalogContent {
 
     public void goToParentDirectory(File file) {
         File directory = new File(file.getParent());
-        if (directory.listFiles().length == 0) {
-            directory.delete();
-            goToParentDirectory(directory);
+        if (!directory.getParentFile().getAbsolutePath().equals(destination.getAbsolutePath())) {
+            if (directory.listFiles().length == 0) {
+                directory.delete();
+                goToParentDirectory(directory);
+            }
         }
     }
 }
