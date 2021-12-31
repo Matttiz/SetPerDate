@@ -17,21 +17,16 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class CatalogContent {
-    private File source;
-    private File destination;
-    private List<FileRow> sourceList = new ArrayList<>();
-    private List<FileRow> destinationList = new ArrayList<>();
+    final private File destination;
+    final private List<FileRow> sourceList = new ArrayList<>();
+    final private List<FileRow> destinationList = new ArrayList<>();
     private List<FileRow> toCopyList = new ArrayList<>();
     private static final List<String> extensions = Arrays.asList("png", "jpg");
 
-    public CatalogContent() {
-    }
-
     @SneakyThrows
     public CatalogContent(File sourceCatalog, File destinationCatalog) {
-        this.source = sourceCatalog;
         this.destination = destinationCatalog;
-        sourceList.addAll(findFiles(source));
+        sourceList.addAll(findFiles(sourceCatalog));
         addFilesFromDestination(destinationCatalog);
         integrationList();
         sort();
@@ -43,14 +38,15 @@ public class CatalogContent {
     }
 
     public void sort() {
-        Collections.sort(toCopyList, new FileRow.sortItems());
+        toCopyList.sort(new FileRow.sortItems());
     }
 
     public void integrationList() {
         toCopyList.addAll(destinationList);
         toCopyList.addAll(sourceList);
         toCopyList = toCopyList.stream()
-                .filter(distinctByKey(p -> p.getLastModificationDateWithHoursAndMinutesAsPrettyString() + " " + p.getExtension() + " " + p.getSize())).collect(Collectors.toList());
+                .filter(distinctByKey(p -> p.getLastModificationDateWithHoursAndMinutesAsPrettyString() + " " + p.getExtension() + " " + p.getSize()))
+                .collect(Collectors.toList());
     }
 
     public static <T> Predicate<T> distinctByKey(Function<? super T, Object> keyExtractor) {
@@ -61,7 +57,7 @@ public class CatalogContent {
     public void print() {
         System.out.println();
         int i = 1;
-        String integer = "";
+        String integer;
         for (FileRow file : toCopyList) {
             integer = String.format("%3d", i);
             System.out.println(
@@ -98,7 +94,7 @@ public class CatalogContent {
         List<FileRow> list = new ArrayList<>();
         FileRow fileRow;
         if (fileToCheck.exists()) {
-            for (File file : listOfFiles) {
+            for (File file : Objects.requireNonNull(listOfFiles)) {
                 if (file.isDirectory()) {
                     list.addAll(findFiles(file));
                 } else {
@@ -125,7 +121,7 @@ public class CatalogContent {
         File[] listOfFiles = fileToCheck.listFiles();
         FileRow fileRow;
         if (fileToCheck.exists()) {
-            for (File file : listOfFiles) {
+            for (File file : Objects.requireNonNull(listOfFiles)) {
                 if (file.isDirectory()) {
                     listToAdd.addAll(findFiles(file));
                 } else {
@@ -195,20 +191,12 @@ public class CatalogContent {
     }
 
     public void deletedDirectory() {
-        System.out.println();
-        for( FileRow fileRow: toCopyList){
-            System.out.println(fileRow.getFile().getAbsolutePath());
-        }
-
-        System.out.println();
-
-
-        for (FileRow fileRow : destinationList) {
-            System.out.println(fileRow.getFile().getAbsolutePath());
-            if (!toCopyList.contains(fileRow)) {
-                System.out.println(fileRow.getFile().getAbsolutePath());
-                fileRow.getFile().delete();
-                goToParentDirectory(fileRow.getFile());
+        if (destinationList.size() != 0) {
+            for (FileRow fileRow : destinationList) {
+                if (fileRow.getAbsolutPathToDestination().contains(destination.getAbsolutePath())) {
+                    fileRow.getFile().delete();
+                    goToParentDirectory(fileRow.getFile());
+                }
             }
         }
     }

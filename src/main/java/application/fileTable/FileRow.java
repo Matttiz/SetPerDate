@@ -12,11 +12,12 @@ import java.util.Date;
 
 public class FileRow {
 
-    private String absolutPathToFile;
-    private long size;
-    private Date lastModificationDate;
+    final private String absolutPathToFile;
+    private String absolutPathToDestination;
+    final private long size;
+    final private Date lastModificationDate;
     private int thisDayPhotoCount;
-    private File file;
+    final private File file;
     private boolean copied;
     final private static String pattern = "yyyy-MM-dd HH:mm:ss";
     final private static String patternDate = "yyyy-MM-dd";
@@ -24,13 +25,10 @@ public class FileRow {
     final private static SimpleDateFormat simpleDateFormatDate = new SimpleDateFormat(patternDate);
 
 
-    public FileRow() {
-    }
-
     @SneakyThrows
     public FileRow(File file, FileTime time) {
         this.absolutPathToFile = file.getAbsoluteFile().getAbsolutePath();
-        this.size = file.getTotalSpace();
+        this.size = file.length();
         this.lastModificationDate = new Date(time.toMillis());
         this.file = file;
     }
@@ -82,6 +80,14 @@ public class FileRow {
         }
     }
 
+    public void setAbsolutPathToDestination(String absolutDestinationPathToFile) {
+        this.absolutPathToDestination = absolutDestinationPathToFile;
+    }
+
+    public String getAbsolutPathToDestination() {
+        return absolutPathToDestination;
+    }
+
     public long getSize() {
         return size;
     }
@@ -114,16 +120,10 @@ public class FileRow {
                     + File.separatorChar
                     + this.getThisDayPhotoCount()
                     + this.getExtension();
-
+            setAbsolutPathToDestination(destinationFile);
             if (!this.getFile().getAbsolutePath().equals(destinationFile)) {
                 System.out.println("Kopiuję " + this.getFile().getAbsolutePath() + " do " + destinationFile);
                 FileUtils.copyFile(new File(this.getAbsolutPathToFile()), new File(destinationFile));
-            }
-
-            if (!destinationFile.equals(this.getFile().getAbsolutePath())
-                    && destinationFile.contains(destination.getAbsolutePath())
-                    && !destinationFile.equals(destination.getAbsolutePath())) {
-                FileUtils.deleteQuietly(this.getFile());
             }
         }
     }
